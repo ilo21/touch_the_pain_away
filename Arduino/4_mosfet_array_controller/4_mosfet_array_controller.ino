@@ -11,7 +11,8 @@ const int clockPin=12;   // clock pin (pulsed to shift bits)
 uint32_t switch_state;  // holds current 32-bit output pattern
 
 
-#define verbose                 // enable serial feedback
+
+#define verbose                 // enable serial feedback, to mute serial printing just undefine it
 #define seq_size 200            // maximum number of steps in a stored sequence
 #define state_mem 6*seq_size    // each step uses 6 bytes (4 for state + 2 for delay)
 
