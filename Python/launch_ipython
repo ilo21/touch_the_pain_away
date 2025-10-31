@@ -1,0 +1,2 @@
+#!/bin/bash
+python -m ipython -i connection.py -- --port="COM1" --baud=115200
