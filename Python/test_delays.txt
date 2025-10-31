@@ -1,0 +1,24 @@
+# one channel after another, each stays on for exactly 10ms
+clearcode
+addcode:0x1/10   // chan 1 ON OFF
+addcode:0x2/10   // chan 2 ON OFF
+addcode:0x4/10   // chan 3 ON OFF
+addcode:0x0/10   // all OFF
+exec
+
+# every next channel joins 5ms after previous and stays on for 10 ms
+clearcode
+addcode:0x1/5     // ch1 ON
+addcode:0x3/5     // ch1+ch2 ON
+addcode:0x6/5     // ch2+ch3 ON
+addcode:0x4/5     // ch3 only ON (ch2 ends)
+addcode:0x0/5     // all OFF
+exec
+
+# every next channel joins 5ms after previous and they are off together in the end
+clearcode
+addcode:0x1/5    // chan 1 ON
+addcode:0x3/5    // chan 1+2 ON
+addcode:0x7/5    // chan 1+2+3 ON
+addcode:0/10     // all OFF
+exec
