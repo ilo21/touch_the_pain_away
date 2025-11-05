@@ -10,7 +10,7 @@ arduino = ArduinoController("COM7", 115200)
 arduino.connect()
 time.sleep(2)
 # set stim from file
-arduino.send_file_line_by_line("test_stimulus.txt", delay=0.01)
+arduino.send_file_line_by_line("test_b.txt", delay=0.01)
 time.sleep(1)
 # apply
 arduino.exec()

@@ -12,7 +12,7 @@ uint32_t switch_state;  // holds current 32-bit output pattern
 
 
 
-#define verbose                 // enable serial feedback, to mute serial printing just undefine it
+//#define verbose                 // enable serial feedback, to mute serial printing just undefine it
 #define seq_size 200            // maximum number of steps in a stored sequence
 #define state_mem 6*seq_size    // each step uses 6 bytes (4 for state + 2 for delay)
 
@@ -199,6 +199,7 @@ void execute_command(String command) {
       #endif
       //interruption of execution if anything comes from serial
       if(Serial.available() ) { 
+        write32bits(0);
         Serial.println("Execution Interrupted!");
         break;
       }
