@@ -1,0 +1,4 @@
+clearcode
+addcode:0x8/10000
+addcode:0x10/10000
+addcode:0x800/10000
