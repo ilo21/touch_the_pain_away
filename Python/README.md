@@ -105,3 +105,8 @@ controller.send_file_line_by_line(os.path.join(stim_dir, "stim_from_ordered_chan
 controller.exec()
 controller.disconnect()
 ```
+
+# TODO
+- function to upload the stimulus directly from csv to arduino (without intermediate txt file)
+- update the readme with the above usage example
+- more tests!
