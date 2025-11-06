@@ -3,4 +3,4 @@ there is a file named "launch_ipython" in the Python directory, where shows how 
 
 # Example usage
 
-connection_readme.txt
+[connection_readme.txt](https://github.com/ilo21/touch_the_pain_away/blob/main/Python/connection_ipython/connection_readme.txt)
