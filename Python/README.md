@@ -5,6 +5,41 @@ Supports sequential, time-based, and matrix (CSV-defined) stimuli.
 
 ---
 
+### `Easiest Usage Example`
+
+```python
+from controller import Controller
+import time
+import os
+
+stim_dir = "stim_files"
+
+"""
+        The easiest way to create and run the stumulus is to prepare a CSV file
+        Example binary matrix CSV 
+        3   1 1 1 1 1 0 0 0 0 0 0 0 0 0
+        4   0 0 0 0 0 1 1 1 1 1 0 0 0 0
+        11  0 0 0 0 0 0 0 0 0 1 1 1 1 1
+
+        Each row corresponds to one channel, with the first column being the channel id,
+        and the following columns being 0/1 values indicating OFF/ON states.
+        The time duration per column is specified when uploading the stimulus.
+"""
+
+print("=== Connect to the controller ===")
+controller = Controller(port="COM7")
+controller.connect()
+time.sleep(2)
+print("\n=== Upload stimulus from csv to the controller ===")
+# select the desired time duration per column (col_ms)
+controller.send_stimulus_from_csv(os.path.join(stim_dir,"motion_stim.csv"), col_ms=10)
+time.sleep(1)
+print("\n=== Run ===")
+controller.exec()
+time.sleep(1)
+controller.disconnect()
+```
+
 ## Overview
 
 This module provides:
@@ -26,6 +61,7 @@ Handles serial connection and file transfer.
 - `connect()` / `disconnect()` – open/close serial port  
 - `send(command)` – send a single line  
 - `send_file_line_by_line(filename, delay=0.01)` – send text file commands line by line  
+- `send_stimulus_from_csv(self, csv_path, col_ms=100, delay=0.01)` – send stimulus defined in CSV format
 - `exec()` – tell Arduino to execute the uploaded sequence  
 
 ---
@@ -44,7 +80,7 @@ Controller.Channel(ids=3, is_on=1, hold_time_ms=500)
 Controller.Channel(ids=3, onset_ms=0, offset_ms=500)
 ```
 
-### `Controller.Channel`
+### `Controller.Stimulus`
 Combines channels into executable sequences.
 
 **Constructors**
@@ -67,7 +103,9 @@ CSV format: first column with channel ids, other columns = time step, each row =
 
 - to_file4arduino_timed(filename) – if the stimulus was created using timed channels or CSV matrix
 
-### `Usage Example`
+---
+
+### `More Usage Examples`
 
 ```python
 from controller import Controller
@@ -107,6 +145,4 @@ controller.disconnect()
 ```
 
 # TODO
-- function to upload the stimulus directly from csv to arduino (without intermediate txt file)
-- update the readme with the above usage example
 - more tests!

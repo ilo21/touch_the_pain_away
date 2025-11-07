@@ -100,6 +100,31 @@ class Controller:
         """Execute the loaded stimulus on Arduino."""
         self.send("exec")
 
+    def send_stimulus_from_csv(self, csv_path, col_ms=100, delay=0.01):
+        """
+        Read a binary matrix CSV and send corresponding Arduino commands directly.
+
+        - Each row = one channel
+        - First column = channel id
+        - Following columns = 0/1 values (OFF/ON)
+        - col_ms = time duration per column
+        - delay = pause between sending lines
+
+        This is equivalent to generating 'stim_from_csv.txt' and then
+        calling send_file_line_by_line(), but avoids creating the file.
+        """
+        stim = Controller.Stimulus.from_csv_matrix(csv_path, col_ms=col_ms)
+        seq = stim.generate_timed_sequence()
+
+        self.send("clearcode")
+        time.sleep(delay)
+
+        for mask, dur in seq:
+            if dur > 0:
+                self.send(f"addcode:0x{mask:X}/{dur}")
+                time.sleep(delay)
+
+
     # =========================================================================
     # CONTEXT MANAGER SUPPORT
     # =========================================================================
