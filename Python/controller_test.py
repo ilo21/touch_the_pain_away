@@ -38,9 +38,9 @@ controller.disconnect()
     
 # # Create channels (define id, on/off state, and hold time)
 # channels = [
-#         Controller.Channel(ids=3, is_on=1, hold_time_ms=500),
-#         Controller.Channel(ids=4, is_on=1, hold_time_ms=500),
-#         Controller.Channel(ids=11, is_on=1, hold_time_ms=500),
+#         Controller.Channel(ids=2, is_on=1, hold_time_ms=10),
+#         Controller.Channel(ids=3, is_on=1, hold_time_ms=10),
+#         Controller.Channel(ids=25, is_on=1, hold_time_ms=10),
 # ]
     
 # # Create stimulus from ordered channels and upload
@@ -53,8 +53,8 @@ controller.disconnect()
 
 # # Create channels (define id, onset and offset time)
 # channels_timed = [
-#             Controller.Channel(ids=3, onset_ms=0, offset_ms=100),
-#             Controller.Channel(ids=4, onset_ms=100, offset_ms=150),
+#             Controller.Channel(ids=2, onset_ms=0, offset_ms=10),
+#             Controller.Channel(ids=3, onset_ms=10, offset_ms=50),
 #             Controller.Channel(ids=11, onset_ms=100, offset_ms=300),
 # ]
         

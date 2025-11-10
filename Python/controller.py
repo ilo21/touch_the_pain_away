@@ -100,30 +100,39 @@ class Controller:
         """Execute the loaded stimulus on Arduino."""
         self.send("exec")
 ################################################################
-# debugging
-    def send_stimulus_from_csv(self, csv_path, delay=0.01):
+# debugging (saves log od sent commands)
+    def send_stimulus_from_csv(self, csv_path, col_ms=100, delay=0.01, log_path="arduino_commands.log"):
         """
-        Read commands from a CSV-generated Arduino stimulus file and send them line by line.
-        Each sent command is logged into 'sent_commands_log.txt' (overwritten each run).
+        Read a binary matrix CSV and send corresponding Arduino commands directly.
+
+        - Each row = one channel
+        - First column = channel id
+        - Following columns = 0/1 values (OFF/ON)
+        - col_ms = time duration per column
+        - delay = pause between sending lines
+        - log_path = path to log file (will be overwritten each time)
+
+        This is equivalent to generating 'stim_from_csv.txt' and then
+        calling send_file_line_by_line(), but avoids creating the file.
         """
-        if not os.path.exists(csv_path):
-            raise FileNotFoundError(f"Stimulus file not found: {csv_path}")
+        stim = Controller.Stimulus.from_csv_matrix(csv_path, col_ms=col_ms)
+        seq = stim.generate_timed_sequence()
 
-        log_path = "sent_commands_log.txt"
+        # Open log file in write mode (overwrites existing file)
+        with open(log_path, 'w') as log_file:
+            # Send clearcode
+            cmd = "clearcode"
+            self.send(cmd)
+            log_file.write(f"{cmd}\n")
+            time.sleep(delay)
 
-        with open(csv_path, "r", encoding="utf-8") as f_in, \
-             open(log_path, "w", encoding="utf-8") as f_log:
-            
-            f_log.write(f"=== Sent Commands Log ===\nSource file: {csv_path}\n\n")
-
-            for line in f_in:
-                line = line.strip()
-                if not line:
-                    continue
-
-                self.send_line(line)
-                f_log.write(line + "\n")
-                time.sleep(delay)
+            # Send addcode commands
+            for mask, dur in seq:
+                if dur > 0:
+                    cmd = f"addcode:0x{mask:x}/{dur}"
+                    self.send(cmd)
+                    log_file.write(f"{cmd}\n")
+                    time.sleep(delay)
 
 ##############################################################################
 
@@ -148,7 +157,7 @@ class Controller:
 
     #     for mask, dur in seq:
     #         if dur > 0:
-    #             self.send(f"addcode:0x{mask:X}/{dur}")
+    #             self.send(f"addcode:0x{mask:x}/{dur}")
     #             time.sleep(delay)
 
 
@@ -305,7 +314,7 @@ class Controller:
             seq = self.generate_sequence()
             lines = ["clearcode"]
             for mask, dur in seq:
-                lines.append(f"addcode:0x{mask:X}/{dur}")
+                lines.append(f"addcode:0x{mask:x}/{dur}")
             with open(path2file, "w", encoding="utf-8") as f:
                 f.write("\n".join(lines))
             return path2file
@@ -323,8 +332,9 @@ class Controller:
                 events.append((ch.onset_ms, mask, "on"))
                 events.append((ch.offset_ms, mask, "off"))
 
-            # Sort by time
-            events.sort()
+            # Sort by time, with OFF events before ON events at same time
+            events.sort(key=lambda x: (x[0], 0 if x[2] == "off" else 1))
+            
             seq = []
             active = 0
             prev_t = 0
@@ -338,6 +348,32 @@ class Controller:
             # final state (off)
             seq.append((0, 0))
             return seq
+# bug with sorting?
+        # def generate_timed_sequence(self):
+        #     """
+        #     Create a time-based activation sequence using channels with onset and offset times.
+        #     """
+        #     events = []
+        #     for ch in self.channels:
+        #         mask = ch.mask
+        #         events.append((ch.onset_ms, mask, "on"))
+        #         events.append((ch.offset_ms, mask, "off"))
+
+        #     # Sort by time
+        #     events.sort()
+        #     seq = []
+        #     active = 0
+        #     prev_t = 0
+
+        #     for t, mask, action in events:
+        #         if t > prev_t:
+        #             seq.append((active, t - prev_t))
+        #         active = (active | mask) if action == "on" else (active & ~mask)
+        #         prev_t = t
+
+        #     # final state (off)
+        #     seq.append((0, 0))
+        #     return seq
 
         def to_file4arduino_timed(self, file_name):
             """Generate Arduino commands from onset/offset timed channels."""
@@ -346,7 +382,7 @@ class Controller:
             lines = ["clearcode"]
             for mask, dur in seq:
                 if dur > 0:
-                    lines.append(f"addcode:0x{mask:X}/{dur}")
+                    lines.append(f"addcode:0x{mask:x}/{dur}")
             with open(path2file, "w", encoding="utf-8") as f:
                 f.write("\n".join(lines))
             return path2file
