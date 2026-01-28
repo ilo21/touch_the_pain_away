@@ -100,7 +100,7 @@ class Controller:
         """Execute the loaded stimulus on Arduino."""
         self.send("exec")
 ################################################################
-# debugging (saves log od sent commands)
+# debugging (saves log of sent commands)
     def send_stimulus_from_csv(self, csv_path, col_ms=100, delay=0.01, log_path="arduino_commands.log"):
         """
         Read a binary matrix CSV and send corresponding Arduino commands directly.
@@ -116,6 +116,40 @@ class Controller:
         calling send_file_line_by_line(), but avoids creating the file.
         """
         stim = Controller.Stimulus.from_csv_matrix(csv_path, col_ms=col_ms)
+        seq = stim.generate_timed_sequence()
+
+        # Open log file in write mode (overwrites existing file)
+        with open(log_path, 'w') as log_file:
+            # Send clearcode
+            cmd = "clearcode"
+            self.send(cmd)
+            log_file.write(f"{cmd}\n")
+            time.sleep(delay)
+
+            # Send addcode commands
+            for mask, dur in seq:
+                if dur > 0:
+                    cmd = f"addcode:0x{mask:x}/{dur}"
+                    self.send(cmd)
+                    log_file.write(f"{cmd}\n")
+                    time.sleep(delay)
+    # keep one final version eventually
+    def send_stimulus_from_csv_vertical(self, csv_path, col_ms=100, delay=0.01, log_path="arduino_commands.log"):
+        """
+        Read a binary matrix CSV and send corresponding Arduino commands directly.
+        CSV:
+        - First row = channel IDs as headers
+        - Each subsequent row = time step (col_ms duration)
+        - Cell values: 1=ON, 0=OFF
+
+        - col_ms = time duration per column
+        - delay = pause between sending lines
+        - log_path = path to log file (will be overwritten each time)
+
+        This is equivalent to generating 'stim_from_csv.txt' and then
+        calling send_file_line_by_line(), but avoids creating the file.
+        """
+        stim = Controller.Stimulus.from_csv_matrix_vertical(csv_path, col_ms=col_ms)
         seq = stim.generate_timed_sequence()
 
         # Open log file in write mode (overwrites existing file)
@@ -296,6 +330,77 @@ class Controller:
                                                     onset_ms=onset,
                                                     offset_ms=n_steps * col_ms))
 
+            return cls(channels)
+        
+        @classmethod
+        def from_csv_matrix_vertical(cls, csv_path, col_ms=100):
+            """
+            Create a Stimulus from a transposed binary matrix CSV.
+
+            First row = channel IDs as headers
+            Each subsequent row = time step (col_ms duration)
+            Cell values: 1=ON, 0=OFF
+
+            Example:
+            3   4   11
+            1   0   0
+            1   0   0
+            1   1   0
+            1   1   0
+            1   1   1
+            0   1   1
+            0   1   1
+            ...
+            """
+            # Read CSV into matrix
+            with open(csv_path, newline="", encoding="utf-8") as f:
+                first_line = f.readline()
+                delimiter = '\t' if '\t' in first_line else ','
+                f.seek(0)
+                reader = csv.reader(f, delimiter=delimiter)
+                
+                # Read all rows
+                all_rows = []
+                for row in reader:
+                    row = [x.strip() for x in row if x.strip() != '']
+                    if row:
+                        all_rows.append(row)
+                
+                if not all_rows:
+                    return cls([])
+                
+                # First row contains channel IDs
+                channel_ids = [int(x) for x in all_rows[0]]
+                
+                # Remaining rows contain time steps
+                time_steps = [[int(x) for x in row] for row in all_rows[1:]]
+            
+            if not time_steps:
+                return cls([])
+            
+            n_steps = len(time_steps)
+            channels = []
+            
+            # Process each channel (column)
+            for ch_idx, ch_id in enumerate(channel_ids):
+                onset = None
+                for step_idx, step_row in enumerate(time_steps):
+                    val = step_row[ch_idx]
+                    if val == 1 and onset is None:
+                        onset = step_idx * col_ms
+                    elif val == 0 and onset is not None:
+                        offset = step_idx * col_ms
+                        channels.append(Controller.Channel(ids=ch_id,
+                                                        onset_ms=onset,
+                                                        offset_ms=offset))
+                        onset = None
+                
+                # Channel still active at the end
+                if onset is not None:
+                    channels.append(Controller.Channel(ids=ch_id,
+                                                    onset_ms=onset,
+                                                    offset_ms=n_steps * col_ms))
+            
             return cls(channels)
 
         # ---------------------------------------------------------------------
