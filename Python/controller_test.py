@@ -17,12 +17,12 @@ stim_dir = "stim_files"
 """
 
 print("=== Connect to the controller ===")
-controller = Controller(port="COM7")
+controller = Controller(port="COM9")
 controller.connect()
 time.sleep(2)
 print("\n=== Upload stimulus from csv to the controller ===")
 # select the desired time duration per column (col_ms)
-controller.send_stimulus_from_csv(os.path.join(stim_dir,"motion_stim.csv"), col_ms=10)
+controller.send_stimulus_from_csv_vertical(os.path.join(stim_dir,"motion_stim_vertical.csv"), col_ms=100)
 time.sleep(1)
 print("\n=== Run ===")
 controller.exec()
