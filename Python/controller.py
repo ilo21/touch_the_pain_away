@@ -491,5 +491,3 @@ class Controller:
             with open(path2file, "w", encoding="utf-8") as f:
                 f.write("\n".join(lines))
             return path2file
-
-
