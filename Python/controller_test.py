@@ -17,7 +17,7 @@ stim_dir = "stim_files"
 """
 
 print("=== Connect to the controller ===")
-controller = Controller(port="COM9")
+controller = Controller(port="COM4")
 controller.connect()
 time.sleep(2)
 print("\n=== Upload stimulus from csv to the controller ===")
